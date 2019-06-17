@@ -14,12 +14,12 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN apt-get install -y xfce4 
 RUN apt-get install -y xfce4-goodies
 RUN apt-get install -y xubuntu-core^
-RUN apt-get install --no-install-recommends ubuntu-desktop 
-RUN apt-get install --no-install-recommends gnome-panel 
-RUN apt-get install --no-install-recommends gnome-settings-daemon 
-RUN apt-get install --no-install-recommends metacity 
-RUN apt-get install --no-install-recommends nautilus 
-RUN apt-get install --no-install-recommends gnome-terminal -y
+RUN apt-get install --no-install-recommends -y ubuntu-desktop 
+RUN apt-get install --no-install-recommends -y gnome-panel 
+RUN apt-get install --no-install-recommends -y gnome-settings-daemon 
+RUN apt-get install --no-install-recommends -y metacity 
+RUN apt-get install --no-install-recommends -y nautilus 
+RUN apt-get install --no-install-recommends -y gnome-terminal
 RUN apt-get -y install tightvncserver
 
 # ENV DISPLAY=:1 \
