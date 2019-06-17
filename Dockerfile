@@ -2,13 +2,15 @@ FROM ubuntu
 
 USER 0
 
+RUN apt-get update
+RUN apt-get upgrade -y
+
 # Set time zone
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Asia/Jerusalem
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-RUN apt-get update
-RUN apt-get upgrade -y
+# Install dependencies for VNC
 RUN apt-get install -y xfce4 
 RUN apt-get install -y xfce4-goodies
 RUN apt-get install -y xubuntu-core^
