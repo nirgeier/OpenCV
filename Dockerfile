@@ -23,6 +23,7 @@ RUN apt -y install novnc websockify python-numpy
 
 RUN apt -y install tightvncserver net-tools sudo 
 RUN apt install -y xfce4 xfce4-goodies 
+RUN apt install -y terminator
 
 # vncserevr settings
 RUN mkdir $HOME/.vnc/ \
