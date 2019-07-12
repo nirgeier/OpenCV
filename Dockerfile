@@ -1,4 +1,4 @@
-FROM nirgeier/ubuntu_desktop
+FROM ubuntu
 
 USER 0
 
@@ -18,12 +18,27 @@ RUN apt update
 RUN apt upgrade -y 
 RUN apt autoremove -y
 
-RUN apt install -y ubuntu-unity-desktop
+#RUN apt install -y ubuntu-unity-desktop
 RUN apt -y install novnc websockify python-numpy
 
 RUN apt -y install tightvncserver net-tools sudo 
-RUN apt install -y xfce4 xfce4-goodies 
-RUN apt install -y terminator
+RUN apt install -y xfce4
+RUN apt install -y --no-install-recommends xfce4-goodies
+RUN apt install -y terminator sudo
+
+WORKDIR /
+RUN echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
+RUN wget https://dl.google.com/linux/linux_signing_key.pub
+RUN apt-key add linux_signing_key.pub
+RUN apt update
+RUN apt install -y google-chrome-stable
+RUN apt install -y vlc
+RUN apt install -y vim
+
+##################################
+# Hack VLC so it can run as root #
+##################################
+RUN sudo sed -i 's/geteuid/getppid/' /usr/bin/vlc
 
 # vncserevr settings
 RUN mkdir $HOME/.vnc/ \
@@ -36,8 +51,10 @@ RUN mkdir $HOME/.vnc/ \
     #    .Xresources is where a user can make changes to certain settings of the graphical desktop, 
     #    like terminal colors, cursor themes, and font rendering. 
     && echo "xrdb $HOME/.Xresources" >> $HOME/.vnc/xstartup \
+    && echo "autocutsel -fork" >> $HOME/.vnc/xstartup \
     && echo "startxfce4 &" >> $HOME/.vnc/xstartup \
     && chmod +x $HOME/.vnc/xstartup 
+
 
 # Install noVNC - HTML5 based VNC viewer
 RUN mkdir -p $HOME/novnc/utils/websockify \
@@ -48,12 +65,31 @@ RUN mkdir -p $HOME/novnc/utils/websockify \
     ## create index.html to forward automatically to `vnc_lite.html`
     && ln -s $HOME/novnc/vnc_lite.html $HOME/novnc/index.html
 
-RUN echo "\n\n--- VNC / NoVnc setup" >> ~/.bashrc \
-    && echo "export USER=root"  >> ~/.bashrc \
-    && echo "sudo vncserver -geometry 1900x1080 -depth 24 &"  >> ~/.bashrc \
-    && echo "sudo $HOME/novnc/utils/launch.sh --vnc localhost:5901 &"  >> ~/.bashrc 
+RUN echo "#!/bin/bash" >> ~/.firstRun \
+    && echo "if [ -z \$VNC_FIRST_RUN ] ;" >> ~/.firstRun \
+    && echo "  then " >> ~/.firstRun \
+    && echo "    export USER=root" >> ~/.firstRun \
+    && echo "    export VNC_FIRST_RUN=1 " >> ~/.firstRun \
+    && echo "    vncserver -geometry 1900x1080 -depth 24 &  " >> ~/.firstRun \
+    && echo "    $HOME/novnc/utils/launch.sh --vnc localhost:5901 & " >> ~/.firstRun \
+    && echo "    vlc --no-qt-privacy-ask --reset-config & " >> ~/.firstRun \
+    && echo "fi" >> ~/.firstRun \ 
+    && echo "source ~/.firstRun" >> ~/.bashrc \
+    && echo "sed -i 's/#vout=/vout=xcb_x11/' ~/.config/vlc/vlcrc " >> ~/.bashrc \
+    && chmod +x ~/.firstRun 
 
-# WORKDIR /etc/ssl 
-# RUN openssl req -x509 -nodes -newkey rsa:2048 -keyout novnc.pem -out novnc.pem -days 365 
-# RUN chmod 777 novnc.pem
+#!/usr/bin/env xdg-open
+RUN mkdir ~/Desktop \
+    && echo "#!/usr/bin/env xdg-open" >> ~/Desktop/chrome.desktop \
+    && echo "[Desktop Entry]" >> ~/Desktop/chrome.desktop \
+    && echo "Version=1.0" >> ~/Desktop/chrome.desktop \
+    && echo "Type=Application" >> ~/Desktop/chrome.desktop \
+    && echo "Terminal=false" >> ~/Desktop/chrome.desktop \
+    && echo "Exec=/usr/bin/google-chrome --no-sandbox" >> ~/Desktop/chrome.desktop \
+    && echo "Name=Chrome" >> ~/Desktop/chrome.desktop \
+    && echo "Comment=Chrome" >> ~/Desktop/chrome.desktop \
+    && echo "Icon=/usr/share/icons/hicolor/48x48/apps/google-chrome.png " >> ~/Desktop/chrome.desktop \
+    && chmod +x ~/Desktop/chrome.desktop 
+
+
 
